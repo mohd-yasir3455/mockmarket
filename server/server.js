@@ -168,4 +168,12 @@ app.get('/api/dashboard/:username', async (req, res) => {
   }
 });
 
-app.listen(process.env.PORT || 5000, () => console.log(`Server running`));
+// For Vercel serverless functions, export the app as a handler instead of starting a server
+const serverless = require('serverless-http');
+module.exports = serverless(app);
+
+// When running locally (node server.js), start the server — this will not run in Vercel's serverless environment
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
