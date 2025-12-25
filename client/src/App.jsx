@@ -29,7 +29,7 @@ function App() {
   useEffect(() => {
     const fetchTrends = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/top-stocks');
+        const res = await axios.get('/api/top-stocks');
         setMarketTrends(res.data);
       } catch (err) { console.error(err); }
     };
@@ -38,7 +38,7 @@ function App() {
 
   const fetchDashboard = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/dashboard/${USERNAME}`);
+      const res = await axios.get(`/api/dashboard/${USERNAME}`);
       setData(res.data);
     } catch (err) { console.error(err); }
   };
