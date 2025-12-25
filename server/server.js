@@ -13,9 +13,39 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error(err));
+// Attempt an initial connection if MONGO_URI is provided, but don't crash if it's missing
+const connectToDb = async () => {
+  if (!process.env.MONGO_URI) {
+    console.warn('MONGO_URI not set. API routes will return 503 until configured in Vercel.');
+    return;
+  }
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('MongoDB Connected');
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+  }
+};
+connectToDb();
+
+// Middleware: ensure DB is reachable for API routes; tries to connect per-request if needed
+app.use('/api', async (req, res, next) => {
+  if (!process.env.MONGO_URI) {
+    return res.status(503).json({ msg: 'Database not configured. Set MONGO_URI in Vercel environment variables.' });
+  }
+
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await mongoose.connect(process.env.MONGO_URI);
+      console.log('MongoDB connected (per-request)');
+    } catch (err) {
+      console.error('DB connect (per-request) failed:', err.message);
+      return res.status(500).json({ msg: 'Database connection failed' });
+    }
+  }
+
+  next();
+});
 
 // --- SMART PRICE FETCHER ---
 // We add a 'strict' flag. 
